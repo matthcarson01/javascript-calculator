@@ -19,7 +19,7 @@ const intitalState = {
 function reducer(state, {type,payload}){
   switch(type){
     case ACTIONS.CLEAR:
-      return {};
+      return intitalState;
     case ACTIONS.SOLVE:
       return {
         ...state,
@@ -40,18 +40,18 @@ function reducer(state, {type,payload}){
         currOperand: `${state.currOperand || ""}${payload.num}`,
       }
     case ACTIONS.PICK_OP:
-      if (state.currOperand == null && state.prevOperand == null) {
+      if (state.currOperand === '' && state.prevOperand === '') {
         return state
       }
 
-      if (state.currOperand == null || state.currOperand == '') {
+      if (state.currOperand === null || state.currOperand === '') {
         return {
           ...state,
           operation: payload.op,
         }
       }
 
-      if (state.prevOperand == null || state.prevOperand == '' ) {
+      if (state.prevOperand === null || state.prevOperand === '' ) {
         return {
           ...state,
           operation: payload.op,
