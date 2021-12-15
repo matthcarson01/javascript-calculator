@@ -1,22 +1,33 @@
 import { useReducer } from 'react';
 import NumBttn from './NumBttn';
+import OpBttn from './OpBttn';
 import './App.css';
+
 export const ACTIONS = {
   CLEAR: "clear",
   SOLVE: "solve",
-  ADD_NUMBER: "add-number"
+  ADD_NUMBER: "add-number",
+  PICK_OP: "pick-op"
 }
+
 const intitalState = {
   operation: '',
   prevOperand: '' ,
   currOperand: '',
 }
+
 function reducer(state, {type,payload}){
   switch(type){
     case ACTIONS.CLEAR:
       return {};
     case ACTIONS.SOLVE:
-        return {};
+      return {
+        ...state,
+        overwrite: true,
+        prevOperand: '',
+        operation: '',
+        currOperand: evaluate(state),
+      }
     case ACTIONS.ADD_NUMBER:
       if (payload.num === 0 && state.currOperand === "0") {
         return state
@@ -28,9 +39,60 @@ function reducer(state, {type,payload}){
         ...state,
         currOperand: `${state.currOperand || ""}${payload.num}`,
       }
+    case ACTIONS.PICK_OP:
+      if (state.currOperand == null && state.prevOperand == null) {
+        return state
+      }
+
+      if (state.currOperand == null || state.currOperand == '') {
+        return {
+          ...state,
+          operation: payload.op,
+        }
+      }
+
+      if (state.prevOperand == null || state.prevOperand == '' ) {
+        return {
+          ...state,
+          operation: payload.op,
+          prevOperand: state.currOperand,
+          currOperand: null,
+        }
+      }
+
+      return {
+        ...state,
+        prevOperand: evaluate(state),
+        operation: payload.op,
+        currOperand: null,
+      }    
     default:
       return state
   }
+}
+
+function evaluate({ currOperand, prevOperand, operation }) {
+  console.log(`currOperand:${currOperand} prevOperand:${prevOperand}`)
+  const prev = parseFloat(prevOperand)
+  const current = parseFloat(currOperand)
+  if (isNaN(prev) || isNaN(current)) return ""
+  let computation = ""
+  switch (operation) {
+    case "+":
+      computation = prev + current
+      break
+    case "-":
+      computation = prev - current
+      break
+    case "*":
+      computation = prev * current
+      break
+    case "÷":
+      computation = prev / current
+      break
+  }
+
+  return computation.toString()
 }
 
 function App() {
@@ -56,19 +118,24 @@ function App() {
               {id:"three",num:3,dispatch},
               {id:"two",num:2,dispatch},
               {id:"one",num:1,dispatch},
-              // {id:"zero",num:0,dispatch},
             ].map( 
-              button=><NumBttn id={button.id} num={button.num} dispatch={button.dispatch}/> 
+              button=><NumBttn key={button.id}id={button.id} num={button.num} dispatch={button.dispatch}/> 
               )
           }
         <div id="zero" className="btn-2 bkg-ltgry" onClick={ () => dispatch({ type: ACTIONS.ADD_NUMBER, payload:{num:0}})}  >0</div>
-        <div id="decimal" className="btn bkg-ltgry">.</div>
-        <div id="divide" className="btn bkg-gry" onClick={() => {}}>/</div>
-        <div id="multiply" className="btn bkg-gry" onClick={() => {}}>*</div>
-        <div id="subtract" className="btn bkg-gry" onClick={() => {}}>-</div>
-        <div id="add" className="btn bkg-gry" onClick={() => {}}>+</div>
-        <div id="equals" className="btn-3 bkg-gry" onClick={() => {}}>=</div>
-        <div id="clear" className="btn bkg-rd" onClick={() => {}}>AC</div>
+        <NumBttn id="decimal" num={"."} dispatch={dispatch}/>
+        {
+          [
+            {id:"divide",op:"/",dispatch},
+            {id:"multiply",op:"*",dispatch},
+            {id:"subtract",op:"-",dispatch},
+            {id:"add",op:"+",dispatch},
+          ].map(
+            button=><OpBttn key={button.id} id={button.id} op={button.op} dispatch={button.dispatch}/>
+          )
+        }
+        <div id="equals" className="btn-3 bkg-gry" onClick={() => dispatch({ type: ACTIONS.SOLVE })}>=</div>
+        <div id="clear" className="btn bkg-rd" onClick={() => dispatch({ type: ACTIONS.CLEAR })}>AC</div>
       </section>
     </main>
   );
